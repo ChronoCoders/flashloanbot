@@ -14,7 +14,7 @@ require('dotenv').config();
 
 // Prometheus metrics setup
 const collectDefaultMetrics = client.collectDefaultMetrics;
-collectDefaultMetrics();
+collectDefaultMetrics({ eventLoopDelay: false });
 
 const httpRequestDuration = new client.Histogram({
   name: 'http_request_duration_seconds',
@@ -817,43 +817,4 @@ async function sendEmergencyAlertToAdmin(reason) {
   };
   
   try {
-    await sgMail.send(msg);
-  } catch (error) {
-    console.error('Emergency admin alert error:', error);
-  }
-}
-
-// Error handling middleware
-app.use((error, req, res, next) => {
-  console.error('Unhandled error:', error);
-  res.status(500).json({ error: 'Internal server error' });
-});
-
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({ error: 'Route not found' });
-});
-
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📊 Metrics available at http://localhost:${PORT}/metrics`);
-  console.log(`🏥 Health check at http://localhost:${PORT}/health`);
-  
-  // Setup blockchain listeners
-  setupBlockchainListeners();
-  console.log('🔗 Blockchain event listeners active');
-});
-
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully');
-  process.exit(0);
-});
-
-process.on('SIGINT', () => {
-  console.log('SIGINT received, shutting down gracefully');
-  process.exit(0);
-});
-
-module.exports = app;
+    await sgMail.send(msg
