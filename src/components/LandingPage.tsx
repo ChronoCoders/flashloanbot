@@ -547,16 +547,16 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                 <li><button onClick={() => scrollToSection('features')} className="hover:text-white transition-colors cursor-pointer">Özellikler</button></li>
                 <li><button onClick={() => scrollToSection('how-it-works')} className="hover:text-white transition-colors cursor-pointer">Nasıl Çalışır</button></li>
                 <li><button onClick={() => scrollToSection('pricing')} className="hover:text-white transition-colors cursor-pointer">Fiyatlandırma</button></li>
-                <li><a href="#api" onClick={() => { window.location.hash = 'api'; window.scrollTo(0, 0); }} className="hover:text-white transition-colors cursor-pointer">API</a></li>
+                <li><button onClick={() => { window.location.hash = 'api'; window.scrollTo(0, 0); }} className="hover:text-white transition-colors cursor-pointer">API</button></li>
               </ul>
             </div>
             
             <div>
               <h4 className="text-white font-semibold mb-4">Destek</h4>
               <ul className="space-y-2 text-gray-400 text-sm">
-                <li><a href="#docs" onClick={() => { window.location.hash = 'docs'; window.scrollTo(0, 0); }} className="hover:text-white transition-colors cursor-pointer">Dokümantasyon</a></li>
-                <li><a href="#help" onClick={() => { window.location.hash = 'help'; window.scrollTo(0, 0); }} className="hover:text-white transition-colors cursor-pointer">Yardım Merkezi</a></li>
-                <li><a href="#contact" onClick={() => { window.location.hash = 'contact'; window.scrollTo(0, 0); }} className="hover:text-white transition-colors cursor-pointer">İletişim</a></li>
+                <li><button onClick={() => { window.location.hash = 'docs'; window.scrollTo(0, 0); }} className="hover:text-white transition-colors cursor-pointer">Dokümantasyon</button></li>
+                <li><button onClick={() => { window.location.hash = 'help'; window.scrollTo(0, 0); }} className="hover:text-white transition-colors cursor-pointer">Yardım Merkezi</button></li>
+                <li><button onClick={() => { window.location.hash = 'contact'; window.scrollTo(0, 0); }} className="hover:text-white transition-colors cursor-pointer">İletişim</button></li>
                 <li><a href="https://discord.gg/flashusdt" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors cursor-pointer">Discord</a></li>
               </ul>
             </div>
@@ -564,10 +564,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             <div>
               <h4 className="text-white font-semibold mb-4">Yasal</h4>
               <ul className="space-y-2 text-gray-400 text-sm">
-                <li><a href="#privacy" onClick={() => { window.location.hash = 'privacy'; window.scrollTo(0, 0); }} className="hover:text-white transition-colors cursor-pointer">Gizlilik Politikası</a></li>
-                <li><a href="#terms" onClick={() => { window.location.hash = 'terms'; window.scrollTo(0, 0); }} className="hover:text-white transition-colors cursor-pointer">Kullanım Şartları</a></li>
-                <li><a href="#risk" onClick={() => { window.location.hash = 'risk'; window.scrollTo(0, 0); }} className="hover:text-white transition-colors cursor-pointer">Risk Bildirimi</a></li>
-                <li><a href="#audit" onClick={() => { window.location.hash = 'audit'; window.scrollTo(0, 0); }} className="hover:text-white transition-colors cursor-pointer">Audit Raporu</a></li>
+                <li><button onClick={() => { window.location.hash = 'privacy'; window.scrollTo(0, 0); }} className="hover:text-white transition-colors cursor-pointer">Gizlilik Politikası</button></li>
+                <li><button onClick={() => { window.location.hash = 'terms'; window.scrollTo(0, 0); }} className="hover:text-white transition-colors cursor-pointer">Kullanım Şartları</button></li>
+                <li><button onClick={() => { window.location.hash = 'risk'; window.scrollTo(0, 0); }} className="hover:text-white transition-colors cursor-pointer">Risk Bildirimi</button></li>
+                <li><button onClick={() => { window.location.hash = 'audit'; window.scrollTo(0, 0); }} className="hover:text-white transition-colors cursor-pointer">Audit Raporu</button></li>
               </ul>
             </div>
           </div>
