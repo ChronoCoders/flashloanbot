@@ -774,4 +774,15 @@ async function sendEmergencyAlertToAdmin(reason) {
   };
   
   try {
-    await sgMail.send(msg
+    await sgMail.send(msg);
+  } catch (error) {
+    console.error('Emergency alert email error:', error);
+  }
+}
+
+// Start server and setup blockchain listeners
+setupBlockchainListeners();
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
