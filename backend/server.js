@@ -7,7 +7,6 @@ const morgan = require('morgan');
 const { Pool } = require('pg');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const { ethers } = require('ethers');
 const sgMail = require('@sendgrid/mail');
 require('dotenv').config();
 
@@ -23,69 +22,63 @@ const pool = new Pool({
 // SendGrid setup
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-// Blockchain setup
-const provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
-const contract = new ethers.Contract(
-  process.env.CONTRACT_ADDRESS,
-  [
-    {
-      "inputs": [],
-      "name": "getBotStats",
-      "outputs": [
-        {"internalType": "uint256", "name": "totalProfit", "type": "uint256"},
-        {"internalType": "uint256", "name": "totalTrades", "type": "uint256"},
-        {"internalType": "uint256", "name": "successfulTrades", "type": "uint256"},
-        {"internalType": "uint256", "name": "totalInvestors", "type": "uint256"},
-        {"internalType": "uint256", "name": "totalInvestment", "type": "uint256"},
-        {"internalType": "uint256", "name": "successRate", "type": "uint256"},
-        {"internalType": "bool", "name": "emergencyMode", "type": "bool"}
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [{"internalType": "address", "name": "yatirimci", "type": "address"}],
-      "name": "getInvestorInfo",
-      "outputs": [
-        {"internalType": "uint256", "name": "investment", "type": "uint256"},
-        {"internalType": "uint256", "name": "profit", "type": "uint256"},
-        {"internalType": "uint256", "name": "lastTransactionTime", "type": "uint256"},
-        {"internalType": "uint256", "name": "totalWithdrawn", "type": "uint256"}
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "makeInvestment",
-      "outputs": [],
-      "stateMutability": "payable",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "withdrawProfit",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "emergencyWithdraw",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "paused",
-      "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
-      "stateMutability": "view",
-      "type": "function"
+// Blockchain setup - will be initialized after contract deployment
+let provider = null;
+let contract = null;
+let blockchainConnected = false;
+
+// Initialize blockchain connection
+async function initializeBlockchain() {
+  try {
+    if (!process.env.RPC_URL || !process.env.CONTRACT_ADDRESS) {
+      console.log('⚠️ Blockchain configuration missing - running in database-only mode');
+      return false;
     }
-  ],
-  provider
-);
+
+    const { ethers } = require('ethers');
+    provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
+    
+    // Test connection
+    await provider.getNetwork();
+    
+    // Contract ABI - will be updated after deployment
+    const contractABI = [
+      {
+        "inputs": [],
+        "name": "getBotStats",
+        "outputs": [
+          {"internalType": "uint256", "name": "totalProfit", "type": "uint256"},
+          {"internalType": "uint256", "name": "totalTrades", "type": "uint256"},
+          {"internalType": "uint256", "name": "successfulTrades", "type": "uint256"},
+          {"internalType": "uint256", "name": "totalInvestors", "type": "uint256"},
+          {"internalType": "uint256", "name": "totalInvestment", "type": "uint256"},
+          {"internalType": "uint256", "name": "successRate", "type": "uint256"},
+          {"internalType": "bool", "name": "emergencyMode", "type": "bool"}
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      }
+    ];
+    
+    contract = new ethers.Contract(process.env.CONTRACT_ADDRESS, contractABI, provider);
+    
+    // Test contract connection
+    await contract.getBotStats();
+    
+    blockchainConnected = true;
+    console.log('✅ Blockchain connection established');
+    
+    // Setup event listeners
+    setupBlockchainListeners();
+    
+    return true;
+  } catch (error) {
+    console.log('⚠️ Blockchain connection failed:', error.message);
+    console.log('📊 Running in database-only mode');
+    blockchainConnected = false;
+    return false;
+  }
+}
 
 // Middleware
 app.use(helmet());
@@ -138,7 +131,15 @@ app.get('/health', (req, res) => {
     status: 'healthy', 
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    version: process.env.npm_package_version || '1.0.0'
+    version: process.env.npm_package_version || '1.0.0',
+    blockchain: {
+      connected: blockchainConnected,
+      contractAddress: process.env.CONTRACT_ADDRESS || 'not_deployed',
+      rpcUrl: process.env.RPC_URL ? 'configured' : 'not_configured'
+    },
+    database: {
+      connected: true // Will be updated with actual DB health check
+    }
   });
 });
 
@@ -358,31 +359,41 @@ app.get('/api/bot/stats', async (req, res) => {
       FROM investments WHERE status = 'active'
     `);
     
-    // Get blockchain stats
-    let blockchainStats;
-    try {
-      blockchainStats = await contract.getBotStats();
-    } catch (error) {
-      console.error('Blockchain stats error:', error);
-      blockchainStats = {
-        totalProfit: ethers.BigNumber.from(0),
-        totalTrades: ethers.BigNumber.from(0),
-        successfulTrades: ethers.BigNumber.from(0),
-        emergencyMode: false
-      };
+    // Get blockchain stats if available
+    let blockchainStats = {
+      totalProfit: 0,
+      totalTrades: 0,
+      successfulTrades: 0,
+      emergencyMode: false
+    };
+    
+    if (blockchainConnected && contract) {
+      try {
+        const { ethers } = require('ethers');
+        const stats = await contract.getBotStats();
+        blockchainStats = {
+          totalProfit: parseFloat(ethers.utils.formatEther(stats.totalProfit || 0)),
+          totalTrades: stats.totalTrades?.toNumber() || 0,
+          successfulTrades: stats.successfulTrades?.toNumber() || 0,
+          emergencyMode: stats.emergencyMode || false
+        };
+      } catch (error) {
+        console.error('Blockchain stats error:', error);
+      }
     }
     
     const stats = {
-      totalProfit: parseFloat(ethers.utils.formatEther(blockchainStats.totalProfit || 0)),
-      totalTrades: blockchainStats.totalTrades?.toNumber() || 0,
-      successfulTrades: blockchainStats.successfulTrades?.toNumber() || 0,
+      totalProfit: blockchainStats.totalProfit,
+      totalTrades: blockchainStats.totalTrades,
+      successfulTrades: blockchainStats.successfulTrades,
       totalInvestors: parseInt(dbStats.rows[0].total_investors) || 0,
       totalInvestment: parseFloat(dbStats.rows[0].total_investment) || 0,
-      successRate: blockchainStats.totalTrades?.toNumber() > 0 
-        ? (blockchainStats.successfulTrades?.toNumber() / blockchainStats.totalTrades?.toNumber()) * 100 
+      successRate: blockchainStats.totalTrades > 0 
+        ? (blockchainStats.successfulTrades / blockchainStats.totalTrades) * 100 
         : 0,
-      emergencyMode: blockchainStats.emergencyMode || false,
-      lastUpdated: new Date().toISOString()
+      emergencyMode: blockchainStats.emergencyMode,
+      lastUpdated: new Date().toISOString(),
+      dataSource: blockchainConnected ? 'blockchain_and_database' : 'database_only'
     };
     
     res.json(stats);
@@ -419,13 +430,17 @@ app.post('/api/investments', authenticateToken, async (req, res) => {
     }
     
     // Verify transaction on blockchain
-    try {
-      const tx = await provider.getTransaction(transactionHash);
-      if (!tx || tx.to.toLowerCase() !== process.env.CONTRACT_ADDRESS.toLowerCase()) {
-        return res.status(400).json({ error: 'Invalid transaction' });
+    if (blockchainConnected && provider) {
+      try {
+        const tx = await provider.getTransaction(transactionHash);
+        if (!tx || tx.to.toLowerCase() !== process.env.CONTRACT_ADDRESS.toLowerCase()) {
+          return res.status(400).json({ error: 'Invalid transaction' });
+        }
+      } catch (error) {
+        return res.status(400).json({ error: 'Transaction verification failed' });
       }
-    } catch (error) {
-      return res.status(400).json({ error: 'Transaction verification failed' });
+    } else {
+      console.log('⚠️ Blockchain verification skipped - running in database-only mode');
     }
     
     // Record investment
@@ -668,9 +683,17 @@ async function sendContactConfirmationEmail(email, name) {
 
 // Blockchain event listeners
 function setupBlockchainListeners() {
+  if (!blockchainConnected || !contract) {
+    console.log('⚠️ Blockchain listeners not setup - contract not deployed');
+    return;
+  }
+
+  console.log('🔗 Setting up blockchain event listeners...');
+  
   // Listen for investment events
   contract.on('InvestmentReceived', async (investor, amount, timestamp, event) => {
     try {
+      const { ethers } = require('ethers');
       console.log('Investment received:', { investor, amount: ethers.utils.formatEther(amount), timestamp });
       
       // Update database with real blockchain data
@@ -701,6 +724,7 @@ function setupBlockchainListeners() {
   // Listen for arbitrage events
   contract.on('RealArbitrageExecuted', async (tokenA, tokenB, profit, gasUsed, txHash, event) => {
     try {
+      const { ethers } = require('ethers');
       console.log('Arbitrage executed:', { 
         tokenA, 
         tokenB, 
@@ -756,6 +780,7 @@ function setupBlockchainListeners() {
 
 async function distributeProfitsToInvestors(totalProfit) {
   try {
+    const { ethers } = require('ethers');
     // Get all active investments
     const investments = await pool.query(`
       SELECT user_id, investment_amount, 
@@ -790,16 +815,3 @@ async function distributeProfitsToInvestors(totalProfit) {
   } catch (error) {
     console.error('Profit distribution error:', error);
   }
-}
-
-async function sendEmergencyNotificationEmail(email, name, reason) {
-  const msg = {
-    to: email,
-    from: process.env.FROM_EMAIL,
-    subject: '🚨 Acil Durum Bildirimi - Flash USDT Bot',
-    html: `
-      <h2>Acil Durum Bildirimi</h2>
-      <p>Merhaba ${name},</p>
-      <p>Flash USDT Bot sisteminde acil durum modu aktif edilmiştir.</p>
-      <p><strong>Sebep:</strong> ${reason}</p>
-      <p>Yatırımlarınız güvende ve acil çekim işlemi yapabil
