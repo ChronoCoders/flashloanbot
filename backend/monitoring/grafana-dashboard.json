@@ -1,0 +1,175 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Flash USDT Bot Monitoring Dashboard",
+    "tags": ["flashusdt", "defi", "arbitrage"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Bot Statistics Overview",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "flashusdt_total_profit",
+            "legendFormat": "Total Profit (ETH)"
+          },
+          {
+            "expr": "flashusdt_total_investors",
+            "legendFormat": "Total Investors"
+          },
+          {
+            "expr": "flashusdt_total_investment",
+            "legendFormat": "Total Investment (ETH)"
+          },
+          {
+            "expr": "flashusdt_success_rate",
+            "legendFormat": "Success Rate (%)"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "API Request Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total[5m])",
+            "legendFormat": "{{method}} {{route}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+      },
+      {
+        "id": 3,
+        "title": "Response Time",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "95th percentile"
+          },
+          {
+            "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "50th percentile"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+      },
+      {
+        "id": 4,
+        "title": "Error Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{status_code=~\"4..\"}[5m])",
+            "legendFormat": "4xx errors"
+          },
+          {
+            "expr": "rate(http_requests_total{status_code=~\"5..\"}[5m])",
+            "legendFormat": "5xx errors"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16}
+      },
+      {
+        "id": 5,
+        "title": "Arbitrage Performance",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(flashusdt_total_trades[1h])",
+            "legendFormat": "Trades per hour"
+          },
+          {
+            "expr": "rate(flashusdt_successful_trades[1h])",
+            "legendFormat": "Successful trades per hour"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16}
+      },
+      {
+        "id": 6,
+        "title": "System Resources",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "process_resident_memory_bytes",
+            "legendFormat": "Memory Usage"
+          },
+          {
+            "expr": "rate(process_cpu_seconds_total[5m]) * 100",
+            "legendFormat": "CPU Usage (%)"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24}
+      },
+      {
+        "id": 7,
+        "title": "Database Connections",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "pg_stat_database_numbackends",
+            "legendFormat": "Active connections"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24}
+      },
+      {
+        "id": 8,
+        "title": "KYC Status Distribution",
+        "type": "piechart",
+        "targets": [
+          {
+            "expr": "flashusdt_kyc_pending",
+            "legendFormat": "Pending"
+          },
+          {
+            "expr": "flashusdt_kyc_approved",
+            "legendFormat": "Approved"
+          },
+          {
+            "expr": "flashusdt_kyc_rejected",
+            "legendFormat": "Rejected"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 32}
+      },
+      {
+        "id": 9,
+        "title": "Investment Distribution",
+        "type": "histogram",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, flashusdt_investment_amount_bucket)",
+            "legendFormat": "Investment amounts"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 32}
+      },
+      {
+        "id": 10,
+        "title": "Email Notifications",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(flashusdt_emails_sent_total[5m])",
+            "legendFormat": "Emails sent"
+          },
+          {
+            "expr": "rate(flashusdt_email_failures_total[5m])",
+            "legendFormat": "Email failures"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 40}
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "30s"
+  }
+}

@@ -1,0 +1,144 @@
+# Prometheus alert rules for Flash USDT Bot
+
+groups:
+  - name: flashusdt_alerts
+    rules:
+      # High error rate
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status_code=~"5.."}[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value }} errors per second"
+
+      # High response time
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High response time detected"
+          description: "95th percentile response time is {{ $value }} seconds"
+
+      # Database connection issues
+      - alert: DatabaseConnectionDown
+        expr: up{job="postgres-exporter"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Database connection is down"
+          description: "PostgreSQL database is not responding"
+
+      # High memory usage
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is {{ $value | humanizePercentage }}"
+
+      # High CPU usage
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is {{ $value }}%"
+
+      # Disk space low
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) < 0.1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Disk space is low"
+          description: "Disk space is {{ $value | humanizePercentage }} full"
+
+      # Emergency mode activated
+      - alert: EmergencyModeActivated
+        expr: flashusdt_emergency_mode == 1
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Emergency mode activated"
+          description: "Flash USDT Bot emergency mode has been activated"
+
+      # Low success rate
+      - alert: LowSuccessRate
+        expr: flashusdt_success_rate < 50
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low arbitrage success rate"
+          description: "Arbitrage success rate is {{ $value }}%"
+
+      # No recent arbitrage transactions
+      - alert: NoRecentArbitrage
+        expr: increase(flashusdt_total_trades[1h]) == 0
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "No recent arbitrage transactions"
+          description: "No arbitrage transactions in the last hour"
+
+      # High gas costs
+      - alert: HighGasCosts
+        expr: flashusdt_avg_gas_cost > 100
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High gas costs detected"
+          description: "Average gas cost is {{ $value }} Gwei"
+
+      # KYC backlog
+      - alert: KYCBacklog
+        expr: flashusdt_pending_kyc_count > 50
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High KYC backlog"
+          description: "{{ $value }} KYC submissions pending review"
+
+      # Failed email notifications
+      - alert: EmailNotificationFailures
+        expr: rate(flashusdt_email_failures_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Email notification failures"
+          description: "{{ $value }} email failures per second"
+
+      # Blockchain connection issues
+      - alert: BlockchainConnectionDown
+        expr: flashusdt_blockchain_connected == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Blockchain connection is down"
+          description: "Cannot connect to Ethereum blockchain"
+
+      # Large profit distribution
+      - alert: LargeProfitDistribution
+        expr: increase(flashusdt_total_profit[1h]) > 10
+        for: 0m
+        labels:
+          severity: info
+        annotations:
+          summary: "Large profit distribution"
+          description: "{{ $value }} ETH profit distributed in the last hour"
