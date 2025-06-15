@@ -62,7 +62,8 @@ export const SECURITY_CONFIG = {
   }
 };
 
-[
+// Contract ABI for FlashUSDTLiquidityBot
+export const FLASH_USDT_LIQUIDITY_BOT_ABI = [
   {
     "inputs": [],
     "name": "getBotStats",
@@ -90,7 +91,6 @@ export const SECURITY_CONFIG = {
     "stateMutability": "view",
     "type": "function"
   },
-  // Investment Function - Updated for secure contract
   {
     "inputs": [],
     "name": "makeInvestment",
@@ -98,7 +98,6 @@ export const SECURITY_CONFIG = {
     "stateMutability": "payable",
     "type": "function"
   },
-  // Profit Withdrawal - Updated for secure contract
   {
     "inputs": [],
     "name": "withdrawProfit",
@@ -106,7 +105,6 @@ export const SECURITY_CONFIG = {
     "stateMutability": "nonpayable",
     "type": "function"
   },
-  // Emergency Withdrawal - New security feature
   {
     "inputs": [],
     "name": "emergencyWithdraw",
@@ -114,7 +112,6 @@ export const SECURITY_CONFIG = {
     "stateMutability": "nonpayable",
     "type": "function"
   },
-  // Pausable Check - Security feature
   {
     "inputs": [],
     "name": "paused",
@@ -122,7 +119,6 @@ export const SECURITY_CONFIG = {
     "stateMutability": "view",
     "type": "function"
   },
-  // Events for monitoring
   {
     "anonymous": false,
     "inputs": [
@@ -154,4 +150,4 @@ export const SECURITY_CONFIG = {
     "name": "EmergencyActivated",
     "type": "event"
   }
-]
+];
