@@ -27,7 +27,63 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 const provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
 const contract = new ethers.Contract(
   process.env.CONTRACT_ADDRESS,
-  require('./abi/FlashUSDTLiquidityBot.json'),
+  [
+    {
+      "inputs": [],
+      "name": "getBotStats",
+      "outputs": [
+        {"internalType": "uint256", "name": "totalProfit", "type": "uint256"},
+        {"internalType": "uint256", "name": "totalTrades", "type": "uint256"},
+        {"internalType": "uint256", "name": "successfulTrades", "type": "uint256"},
+        {"internalType": "uint256", "name": "totalInvestors", "type": "uint256"},
+        {"internalType": "uint256", "name": "totalInvestment", "type": "uint256"},
+        {"internalType": "uint256", "name": "successRate", "type": "uint256"},
+        {"internalType": "bool", "name": "emergencyMode", "type": "bool"}
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [{"internalType": "address", "name": "yatirimci", "type": "address"}],
+      "name": "getInvestorInfo",
+      "outputs": [
+        {"internalType": "uint256", "name": "investment", "type": "uint256"},
+        {"internalType": "uint256", "name": "profit", "type": "uint256"},
+        {"internalType": "uint256", "name": "lastTransactionTime", "type": "uint256"},
+        {"internalType": "uint256", "name": "totalWithdrawn", "type": "uint256"}
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "makeInvestment",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "withdrawProfit",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "emergencyWithdraw",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "paused",
+      "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
   provider
 );
 
@@ -746,43 +802,4 @@ async function sendEmergencyNotificationEmail(email, name, reason) {
       <p>Merhaba ${name},</p>
       <p>Flash USDT Bot sisteminde acil durum modu aktif edilmiştir.</p>
       <p><strong>Sebep:</strong> ${reason}</p>
-      <p>Yatırımlarınız güvende ve acil çekim işlemi yapabilirsiniz.</p>
-      <p>Detaylı bilgi için dashboard'unuzu kontrol edin.</p>
-      <br>
-      <p>Flash USDT Bot Ekibi</p>
-    `
-  };
-  
-  try {
-    await sgMail.send(msg);
-  } catch (error) {
-    console.error('Emergency notification email error:', error);
-  }
-}
-
-async function sendEmergencyAlertToAdmin(reason) {
-  const msg = {
-    to: process.env.ADMIN_EMAIL,
-    from: process.env.FROM_EMAIL,
-    subject: '🚨 EMERGENCY ALERT - Flash USDT Bot',
-    html: `
-      <h2>EMERGENCY ALERT</h2>
-      <p>Emergency mode has been activated.</p>
-      <p><strong>Reason:</strong> ${reason}</p>
-      <p>Immediate action may be required.</p>
-    `
-  };
-  
-  try {
-    await sgMail.send(msg);
-  } catch (error) {
-    console.error('Emergency alert email error:', error);
-  }
-}
-
-// Start server and setup blockchain listeners
-setupBlockchainListeners();
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+      <p>Yatırımlarınız güvende ve acil çekim işlemi yapabil
