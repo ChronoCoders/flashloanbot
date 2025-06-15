@@ -9,24 +9,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { ethers } = require('ethers');
 const sgMail = require('@sendgrid/mail');
-const client = require('prom-client');
 require('dotenv').config();
-
-// Prometheus metrics setup
-const collectDefaultMetrics = client.collectDefaultMetrics;
-collectDefaultMetrics({ eventLoopDelay: false });
-
-const httpRequestDuration = new client.Histogram({
-  name: 'http_request_duration_seconds',
-  help: 'Duration of HTTP requests in seconds',
-  labelNames: ['method', 'route', 'status_code']
-});
-
-const totalRequests = new client.Counter({
-  name: 'http_requests_total',
-  help: 'Total number of HTTP requests',
-  labelNames: ['method', 'route', 'status_code']
-});
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -67,26 +50,6 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// Metrics middleware
-app.use((req, res, next) => {
-  const start = Date.now();
-  
-  res.on('finish', () => {
-    const duration = (Date.now() - start) / 1000;
-    const route = req.route ? req.route.path : req.path;
-    
-    httpRequestDuration
-      .labels(req.method, route, res.statusCode)
-      .observe(duration);
-    
-    totalRequests
-      .labels(req.method, route, res.statusCode)
-      .inc();
-  });
-  
-  next();
-});
-
 // Authentication middleware
 const authenticateToken = async (req, res, next) => {
   const authHeader = req.headers['authorization'];
@@ -121,12 +84,6 @@ app.get('/health', (req, res) => {
     uptime: process.uptime(),
     version: process.env.npm_package_version || '1.0.0'
   });
-});
-
-// Metrics endpoint for Prometheus
-app.get('/metrics', (req, res) => {
-  res.set('Content-Type', client.register.contentType);
-  res.end(client.register.metrics());
 });
 
 // Auth routes
