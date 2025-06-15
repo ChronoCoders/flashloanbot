@@ -292,5 +292,3 @@ Kripto para yatırımları yüksek risk içerir. Sadece kaybetmeyi göze alabile
 ---
 
 **⚡ Flash USDT Liquidity Bot - DeFi'nin Geleceği Burada Başlıyor!**
-
-*Bu proje açık kaynak kodlu olup, topluluk katkılarına açıktır. Güvenli, şeffaf ve karlı DeFi deneyimi için geliştirilmiştir.*
