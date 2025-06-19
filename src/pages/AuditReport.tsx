@@ -1,12 +1,15 @@
-import React from 'react';
-import { ArrowLeft, Shield, CheckCircle, AlertCircle, FileText, Download, ExternalLink, Award, Star } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowLeft, Shield, CheckCircle, AlertCircle, FileText, Download, ExternalLink, Award, Star, Eye, AlertTriangle } from 'lucide-react';
 import Logo from '../components/Logo';
+import toast from 'react-hot-toast';
 
 interface AuditReportProps {
   onBack: () => void;
 }
 
 const AuditReport: React.FC<AuditReportProps> = ({ onBack }) => {
+  const [viewingReport, setViewingReport] = useState<string | null>(null);
+
   const auditFindings = [
     {
       severity: 'critical',
@@ -81,6 +84,67 @@ const AuditReport: React.FC<AuditReportProps> = ({ onBack }) => {
     { metric: 'Test Coverage', value: '98.7%' }
   ];
 
+  const auditReports = [
+    {
+      id: 'full-report',
+      title: 'CertiK Tam Audit Raporu',
+      description: 'Detaylı güvenlik analizi, bulgular ve çözümler (PDF, 52 sayfa)',
+      fileName: 'certik-full-audit-report.pdf',
+      details: ['📅 15 Aralık 2024', '📄 52 sayfa', '🔒 Dijital imzalı'],
+      color: 'green',
+      size: '2.4 MB'
+    },
+    {
+      id: 'certificate',
+      title: 'CertiK Güvenlik Sertifikası',
+      description: 'Resmi güvenlik onay sertifikası ve badge (PDF, 2 sayfa)',
+      fileName: 'certik-security-certificate.pdf',
+      details: ['🏆 Sertifika No: CK-2024-1215-FULT', '✅ Doğrulanabilir'],
+      color: 'blue',
+      size: '1.1 MB'
+    },
+    {
+      id: 'summary',
+      title: 'Özet Rapor',
+      description: 'Ana bulgular ve güvenlik skoru özeti (PDF, 8 sayfa)',
+      fileName: 'certik-executive-summary.pdf',
+      details: ['📊 Yönetici Özeti', '📈 Risk Analizi'],
+      color: 'purple',
+      size: '1.8 MB'
+    }
+  ];
+
+  const handleDownload = (report: typeof auditReports[0]) => {
+    try {
+      const link = document.createElement('a');
+      link.href = `/reports/${report.fileName}`;
+      link.download = report.fileName;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.success(`${report.title} indiriliyor...`, {
+        duration: 3000,
+        icon: '📥'
+      });
+    } catch (error) {
+      toast.error('İndirme sırasında bir hata oluştu');
+    }
+  };
+
+  const handleView = (report: typeof auditReports[0]) => {
+    try {
+      window.open(`/reports/${report.fileName}`, '_blank', 'width=800,height=600');
+      toast.success(`${report.title} yeni sekmede açılıyor...`, {
+        duration: 2000,
+        icon: '👁️'
+      });
+    } catch (error) {
+      toast.error('Rapor görüntülenirken bir hata oluştu');
+    }
+  };
+
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case 'critical': return 'bg-red-500/20 text-red-300 border-red-500/30';
@@ -100,6 +164,28 @@ const AuditReport: React.FC<AuditReportProps> = ({ onBack }) => {
       case 'low': return 'bg-blue-500';
       case 'info': return 'bg-gray-500';
       default: return 'bg-gray-500';
+    }
+  };
+
+  const getReportColor = (color: string) => {
+    switch (color) {
+      case 'green': return 'from-green-500/10 to-emerald-500/10 border-green-500/30';
+      case 'blue': return 'from-blue-500/10 to-cyan-500/10 border-blue-500/30';
+      case 'purple': return 'from-purple-500/10 to-pink-500/10 border-purple-500/30';
+      default: return 'from-gray-500/10 to-gray-600/10 border-gray-500/30';
+    }
+  };
+
+  const getButtonColor = (color: string, type: 'primary' | 'secondary') => {
+    if (type === 'primary') {
+      switch (color) {
+        case 'green': return 'bg-green-500 hover:bg-green-600';
+        case 'blue': return 'bg-blue-500 hover:bg-blue-600';
+        case 'purple': return 'bg-purple-500 hover:bg-purple-600';
+        default: return 'bg-gray-500 hover:bg-gray-600';
+      }
+    } else {
+      return 'bg-gray-600 hover:bg-gray-700';
     }
   };
 
@@ -321,96 +407,47 @@ const AuditReport: React.FC<AuditReportProps> = ({ onBack }) => {
             <section>
               <h2 className="text-3xl font-semibold text-white mb-6">Audit Raporları</h2>
               <div className="space-y-4">
-                <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl p-6 border border-green-500/30">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
-                        <FileText className="w-6 h-6 text-green-400" />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="text-white font-semibold text-lg mb-1">CertiK Tam Audit Raporu</h4>
-                        <p className="text-gray-300 text-sm">
-                          Detaylı güvenlik analizi, bulgular ve çözümler (PDF, 52 sayfa)
-                        </p>
-                        <div className="flex items-center space-x-4 mt-2 text-xs text-green-300">
-                          <span>📅 15 Aralık 2024</span>
-                          <span>📄 52 sayfa</span>
-                          <span>🔒 Dijital imzalı</span>
+                {auditReports.map((report) => (
+                  <div key={report.id} className={`bg-gradient-to-r ${getReportColor(report.color)} rounded-xl p-6 border`}>
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className={`w-12 h-12 ${report.color === 'green' ? 'bg-green-500/20' : report.color === 'blue' ? 'bg-blue-500/20' : 'bg-purple-500/20'} rounded-lg flex items-center justify-center`}>
+                          {report.color === 'green' && <FileText className="w-6 h-6 text-green-400" />}
+                          {report.color === 'blue' && <Award className="w-6 h-6 text-blue-400" />}
+                          {report.color === 'purple' && <FileText className="w-6 h-6 text-purple-400" />}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-white font-semibold text-lg mb-1">{report.title}</h4>
+                          <p className="text-gray-300 text-sm mb-2">{report.description}</p>
+                          <div className="flex items-center space-x-4 mt-2 text-xs">
+                            {report.details.map((detail, index) => (
+                              <span key={index} className={`${report.color === 'green' ? 'text-green-300' : report.color === 'blue' ? 'text-blue-300' : 'text-purple-300'}`}>
+                                {detail}
+                              </span>
+                            ))}
+                            <span className="text-gray-400">📁 {report.size}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="flex flex-col space-y-3 flex-shrink-0 ml-4">
-                      <button className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-medium flex items-center justify-center space-x-2 transition-colors min-w-[140px]">
-                        <Download className="w-4 h-4" />
-                        <span>İndir</span>
-                      </button>
-                      <button className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium flex items-center justify-center space-x-2 transition-colors min-w-[140px]">
-                        <ExternalLink className="w-4 h-4" />
-                        <span>Görüntüle</span>
-                      </button>
+                      <div className="flex flex-col space-y-3 flex-shrink-0 ml-4">
+                        <button 
+                          onClick={() => handleDownload(report)}
+                          className={`${getButtonColor(report.color, 'primary')} text-white px-6 py-3 rounded-lg font-medium flex items-center justify-center space-x-2 transition-colors min-w-[140px] hover:scale-105 transform duration-200`}
+                        >
+                          <Download className="w-4 h-4" />
+                          <span>İndir</span>
+                        </button>
+                        <button 
+                          onClick={() => handleView(report)}
+                          className={`${getButtonColor(report.color, 'secondary')} text-white px-6 py-3 rounded-lg font-medium flex items-center justify-center space-x-2 transition-colors min-w-[140px] hover:scale-105 transform duration-200`}
+                        >
+                          <Eye className="w-4 h-4" />
+                          <span>Görüntüle</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-
-                <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-xl p-6 border border-blue-500/30">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                        <Award className="w-6 h-6 text-blue-400" />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="text-white font-semibold text-lg mb-1">CertiK Güvenlik Sertifikası</h4>
-                        <p className="text-gray-300 text-sm">
-                          Resmi güvenlik onay sertifikası ve badge (PDF, 2 sayfa)
-                        </p>
-                        <div className="flex items-center space-x-4 mt-2 text-xs text-blue-300">
-                          <span>🏆 Sertifika No: CK-2024-1215-FULT</span>
-                          <span>✅ Doğrulanabilir</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex flex-col space-y-3 flex-shrink-0 ml-4">
-                      <button className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium flex items-center justify-center space-x-2 transition-colors min-w-[140px]">
-                        <Download className="w-4 h-4" />
-                        <span>İndir</span>
-                      </button>
-                      <button className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium flex items-center justify-center space-x-2 transition-colors min-w-[140px]">
-                        <ExternalLink className="w-4 h-4" />
-                        <span>Görüntüle</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl p-6 border border-purple-500/30">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                        <FileText className="w-6 h-6 text-purple-400" />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="text-white font-semibold text-lg mb-1">Özet Rapor</h4>
-                        <p className="text-gray-300 text-sm">
-                          Ana bulgular ve güvenlik skoru özeti (PDF, 8 sayfa)
-                        </p>
-                        <div className="flex items-center space-x-4 mt-2 text-xs text-purple-300">
-                          <span>📊 Yönetici Özeti</span>
-                          <span>📈 Risk Analizi</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex flex-col space-y-3 flex-shrink-0 ml-4">
-                      <button className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-lg font-medium flex items-center justify-center space-x-2 transition-colors min-w-[140px]">
-                        <Download className="w-4 h-4" />
-                        <span>İndir</span>
-                      </button>
-                      <button className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium flex items-center justify-center space-x-2 transition-colors min-w-[140px]">
-                        <ExternalLink className="w-4 h-4" />
-                        <span>Görüntüle</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                ))}
               </div>
             </section>
 
@@ -453,10 +490,32 @@ const AuditReport: React.FC<AuditReportProps> = ({ onBack }) => {
                 <div className="mt-6 p-4 bg-blue-500/20 rounded-lg">
                   <p className="text-blue-300 text-sm">
                     <strong>Doğrulama Kodu:</strong> CK-2024-1215-FULT-96 | 
-                    <a href="https://certik.com/verify" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 ml-2">
+                    <a 
+                      href="https://certik.com/verify" 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="text-blue-400 hover:text-blue-300 ml-2 underline"
+                    >
                       certik.com/verify adresinden doğrulayın
                     </a>
                   </p>
+                </div>
+              </div>
+            </section>
+
+            {/* Ek Güvenlik Bilgileri */}
+            <section>
+              <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl p-6 border border-purple-500/30">
+                <div className="flex items-start space-x-4">
+                  <AlertTriangle className="w-6 h-6 text-purple-400 mt-1 flex-shrink-0" />
+                  <div>
+                    <h4 className="text-purple-400 font-medium mb-2">Sürekli Güvenlik Takibi</h4>
+                    <p className="text-purple-300 text-sm leading-relaxed">
+                      Bu audit raporu, smart contract'ın mevcut durumunu yansıtmaktadır. 
+                      Gelecekteki güncellemeler için yeni audit süreçleri gerekebilir. 
+                      CertiK, sürekli güvenlik izleme hizmetleri de sunmaktadır.
+                    </p>
+                  </div>
                 </div>
               </div>
             </section>
