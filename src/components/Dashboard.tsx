@@ -25,6 +25,7 @@ import toast from 'react-hot-toast';
 import Logo from './Logo';
 import RealTimeChart from './RealTimeChart';
 import MarketOverview from './MarketOverview';
+import FULTTradingChart from './FULTTradingChart';
 
 interface DashboardProps {
   user: any;
@@ -215,6 +216,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                 <p className="text-gray-400 text-sm">Toplam Yatırımcı</p>
                 <p className="text-2xl font-bold text-purple-400">{botStats.toplamYatirimci}</p>
                 <p className="text-xs text-purple-400 flex items-center mt-1">
+            {/* FULT Token Trading Chart */}
+            <FULTTradingChart />
+            
                   <Users className="w-3 h-3 mr-1" />
                   +3 yeni bu hafta
                 </p>
